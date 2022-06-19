@@ -13,6 +13,7 @@ import { COOKIE_NAME, __prod__ } from "./commons/constants";
 import AppDataSource from "./dataSource";
 import resolvers from "./resolvers/appResolvers";
 import { Context } from "./types/Context";
+import cors from 'cors';
 
 
 const main = async() => {
@@ -22,6 +23,12 @@ const main = async() => {
     const app = express();
 
     const mongoUrl = `mongodb+srv://${process.env.SESSION_DB_USERNAME_DEV_PROD}:${process.env.SESSION_DB_PASSWORD_DEV_PROD}@reddit.kzjzy.mongodb.net/reddit`
+
+    app.use(cors({
+        origin: 'http://localhost:3000',
+        credentials: true, //Receive cookies from client
+    }))
+
     //Session/cookies
     await mongoose.connect(mongoUrl, {})
 

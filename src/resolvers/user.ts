@@ -1,15 +1,22 @@
+import { Context } from "./../types/Context";
 import { COOKIE_NAME } from "./../commons/constants";
 import { LoginInput } from "./../types/LoginInput";
 import { validateRegisterInput } from "./../utils/validateRegisterInput";
 import { RegisterInput } from "./../types/RegisterInput";
 import { UserMutationResponse } from "./../types/UserMutationResponse";
 import { User } from "./../entities/User";
-import { Arg, Mutation, Resolver, Ctx } from "type-graphql";
+import { Arg, Mutation, Resolver, Ctx, Query } from "type-graphql";
 import argon2 from 'argon2'
-import { Context } from "../types/Context";
 
 @Resolver()
 export class UserResolver{
+    @Query(_return => User, {nullable: true})
+    async me(@Ctx() {req, res}: Context) : Promise<User | undefined | null>{
+        if(!req.session.userId) return null;
+        const user = User.findOne({where: {id: req.session.userId}});
+        return user;
+    }
+
     @Mutation(_return => UserMutationResponse)
     async register(
         @Arg('registerInput') registerInput: RegisterInput,
@@ -93,7 +100,6 @@ export class UserResolver{
             success: false,
             message: "Wrong password.",
             errors: [{field: 'password', message: 'Wrong password.'}],
-            user: existingUser
         }
 
         //Create session and return cookie
@@ -102,7 +108,8 @@ export class UserResolver{
         return {
             code: 200,
             success: true,
-            message: "Logged in successfully."
+            message: "Logged in successfully.",
+            user: existingUser
         }
     }
 
