@@ -14,6 +14,7 @@ import AppDataSource from "./dataSource";
 import resolvers from "./resolvers/appResolvers";
 import { Context } from "./types/Context";
 import cors from 'cors';
+import sendEmail from "./utils/sendEmail";
 
 
 const main = async() => {
