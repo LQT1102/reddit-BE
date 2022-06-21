@@ -188,7 +188,7 @@ export class UserResolver{
                 return {
                     code: 400,
                     success: false,
-                    message: `Invalid orr exxpired password reset token.`,
+                    message: `Invalid or expired password reset token.`,
                     errors: [{
                         field: "token",
                         message: "Invalid orr exxpired password reset token."
@@ -198,13 +198,13 @@ export class UserResolver{
 
             const resetPasswordTokenValid = argon2.verify(resetPasswordTokenRecord.token, token);
 
-            if(!resetPasswordTokenRecord) return {
+            if(!resetPasswordTokenValid) return {
                 code: 400,
                 success: false,
-                message: `Invalid orr exxpired password reset token.`,
+                message: `Invalid orr expired password reset token.`,
                 errors: [{
                     field: "token",
-                    message: "Invalid orr exxpired password reset token."
+                    message: "Invalid orr expired password reset token."
                 }]
             };
 
