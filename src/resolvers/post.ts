@@ -9,12 +9,23 @@ import { validateRegisterInput } from "./../utils/validateRegisterInput";
 import { RegisterInput } from "./../types/RegisterInput";
 import { UserMutationResponse } from "./../types/UserMutationResponse";
 import { User } from "./../entities/User";
-import { Arg, Mutation, Resolver, Ctx, Query, ID, UseMiddleware } from "type-graphql";
+import { Arg, Mutation, Resolver, Ctx, Query, ID, UseMiddleware, FieldResolver, Root } from "type-graphql";
 import argon2 from 'argon2'
 import { Context } from "../types/Context";
 
-@Resolver()
+@Resolver(_of => Post)
 export class PostResolver{
+    @FieldResolver(_return => String)
+    textSnippet(@Root() root: Post){
+        return root.text.slice(0, 50) + (root.text.length > 50 ? "..." : "")
+    }
+
+    @FieldResolver(_return => User)
+    async user(@Root() root: Post){
+        return await User.findOne({where: {id: root.userId}});
+    }
+
+
     @UseMiddleware(checkAuth)
     @Mutation(_return => PostMutationResponse)
     async createPost(@Arg('createPostInput') {text, title} : CreatePostInput) : Promise<PostMutationResponse>{
