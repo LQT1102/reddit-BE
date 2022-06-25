@@ -1,6 +1,6 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Field, ObjectType } from "type-graphql";
+import { Column, CreateDateColumn, Entity, ManyToOne, UpdateDateColumn } from 'typeorm';
 import { Base } from "./Base";
-import { Field, ID, ObjectType } from "type-graphql"
 import { User } from "./User";
 
 @ObjectType()
