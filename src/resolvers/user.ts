@@ -7,14 +7,21 @@ import { validateRegisterInput } from "./../utils/validateRegisterInput";
 import { RegisterInput } from "./../types/RegisterInput";
 import { UserMutationResponse } from "./../types/UserMutationResponse";
 import { User } from "./../entities/User";
-import { Arg, Mutation, Resolver, Ctx, Query } from "type-graphql";
+import { Arg, Mutation, Resolver, Ctx, Query, FieldResolver, Root } from "type-graphql";
 import argon2 from 'argon2'
 import { ForgotPasswordInput } from "../types/ForgotPassword";
 import sendEmail from "../utils/sendEmail";
 import {v4 as uuidv4} from 'uuid';
 
-@Resolver()
+@Resolver(_of => User)
 export class UserResolver{
+    @FieldResolver(_return => String)
+    email(@Root() user: User,
+        @Ctx() {req}: Context
+        ){
+            return req.session.userId === user.id ? user.email : '';
+    }
+
     @Query(_return => User, {nullable: true})
     async me(@Ctx() {req, res}: Context) : Promise<User | undefined | null>{
         if(!req.session.userId) return null;
