@@ -16,3 +16,16 @@ export abstract class Base extends BaseEntity{
     @UpdateDateColumn({type: "timestamptz"})
     updatedAt!: Date
 }
+
+
+@ObjectType()
+@Entity() //Declare db table
+export abstract class BaseWithoutId extends BaseEntity{
+    @Field()
+    @CreateDateColumn({type: "timestamptz"})
+    createdAt!: Date
+
+    @Field()
+    @UpdateDateColumn({type: "timestamptz"})
+    updatedAt!: Date
+}

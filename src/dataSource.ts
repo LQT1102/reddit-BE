@@ -1,3 +1,4 @@
+import { Upvote } from "./entities/Upvote";
 import { User } from "./entities/User";
 import { Post } from "./entities/Post";
 import { DataSource } from "typeorm";
@@ -11,7 +12,7 @@ const AppDataSource =  new DataSource({
     database: "reddit",
     synchronize: true,
     logging: true,
-    entities: [User, Post],
+    entities: [User, Post, Upvote],
     subscribers: [],
     migrations: [],
 })

@@ -1,3 +1,4 @@
+import { Upvote } from "./Upvote";
 import { Field, ObjectType } from "type-graphql"
 import { Column, Entity, OneToMany } from 'typeorm'
 import { Base } from "./Base"
@@ -19,4 +20,7 @@ export class User extends Base{
 
     @OneToMany(() => Post, post => post.user)
     posts: Post[]
+
+    @OneToMany(() => Upvote, upvote => upvote.user)
+    upvotes: Upvote[]
 }

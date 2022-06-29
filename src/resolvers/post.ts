@@ -1,6 +1,8 @@
-import { Arg, Ctx, FieldResolver, ID, Int, Mutation, Query, Resolver, Root, UseMiddleware } from "type-graphql";
+import { Context } from "./../types/Context";
+import { Upvote } from "./../entities/Upvote";
+import { VoteType } from "./../types/VoteType";
+import { Arg, Ctx, FieldResolver, ID, Int, Mutation, Query, registerEnumType, Resolver, Root, UseMiddleware } from "type-graphql";
 import { FindManyOptions, LessThan } from "typeorm";
-import { Context } from "../types/Context";
 import { Post } from "./../entities/Post";
 import { User } from "./../entities/User";
 import { checkAuth } from "./../middlewares/checkAuth";
@@ -8,7 +10,11 @@ import { CreatePostInput } from "./../types/CreatePostInput";
 import { PaginatedPosts } from "./../types/PaginatedPosts";
 import { PostMutationResponse } from "./../types/PostMutationResponse";
 import { UpdatePostInput } from "./../types/UpdatePostInput";
+import { UserInputError } from "apollo-server-core";
 
+registerEnumType(VoteType,{
+    name: 'VoteType'
+})
 @Resolver(_of => Post)
 export class PostResolver{
     @FieldResolver(_return => String)
@@ -21,6 +27,25 @@ export class PostResolver{
         return await User.findOne({where: {id: root.userId}});
     }
 
+    @FieldResolver(_return => VoteType, {nullable: true})
+    async votedType(
+        @Root() root: Post, 
+        @Ctx() {req}: Context
+    ){
+        const {userId} = req.session
+        if(!userId){
+            return null;
+        }
+        
+        const existingVote = await Upvote.findOne({
+            where: {
+                postId: root.id,
+                userId
+            }
+        });
+
+        return existingVote?.value || null;
+    }
 
     @UseMiddleware(checkAuth)
     @Mutation(_return => PostMutationResponse)
@@ -175,4 +200,76 @@ export class PostResolver{
             };
         }
     }   
+
+    @UseMiddleware(checkAuth)
+    @Mutation(_return => PostMutationResponse)
+    async vote(
+        @Arg('postId', _type => Int) postId: number,
+        @Arg('voteType', _type => VoteType) voteType : VoteType,
+        @Ctx() {req, dataSource} : Context
+    ): Promise<PostMutationResponse>{
+        try {
+            const {userId} = req.session
+            return await dataSource.transaction(async (transactionEntityManager) => {
+                let post = await transactionEntityManager.findOne(Post, {
+                    where: {
+                        id: postId
+                    }
+                })
+
+                if(!post){
+                    throw new UserInputError('Post not found')
+                }
+
+                //Check if user has voted or not
+                const existingVote = await transactionEntityManager.findOne(Upvote, {
+                    where: {
+                        postId,
+                        userId
+                    }
+                });
+
+                if(existingVote && existingVote.value !== voteType){
+                    await transactionEntityManager.save(Upvote, {
+                        ...existingVote,
+                        value: voteType
+                    })
+
+                    post = await transactionEntityManager.save(Post, {
+                        ...post,
+                        points: post.points + voteType * 2
+                    })
+                }
+
+                if(!existingVote){
+                    const newVote = transactionEntityManager.create(Upvote, {
+                        userId,
+                        postId,
+                        value: voteType
+                    })
+    
+                    transactionEntityManager.save(newVote)
+    
+    
+                    post.points =  post.points + voteType;
+    
+                    post = await transactionEntityManager.save(post);
+                }
+
+                return {
+                    code: 200,
+                    success: true,
+                    post: post,
+                    message: "Successfully"
+                }
+            })
+        } catch (error) {
+            console.log(error)
+            return {
+                code: 500,
+                success: false,
+                message: `Internal server error: ${error.message}`
+            };
+        }
+    }
 }

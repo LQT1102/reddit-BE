@@ -19,8 +19,8 @@ import sendEmail from "./utils/sendEmail";
 
 const main = async() => {
     //Data source
-    await AppDataSource.initialize();
-
+    const dataSource = await AppDataSource.initialize();
+    dataSource.transaction
     const app = express();
 
     const mongoUrl = `mongodb+srv://${process.env.SESSION_DB_USERNAME_DEV_PROD}:${process.env.SESSION_DB_PASSWORD_DEV_PROD}@reddit.kzjzy.mongodb.net/reddit`
@@ -54,9 +54,10 @@ const main = async() => {
             resolvers: resolvers,
             validate: false
         }),
-        context: ({ req, res }): Context => ({
+        context: ({ req, res}): Context => ({
 			req,
 			res,
+            dataSource
 		}), //Get context pass from express
         plugins: [ApolloServerPluginLandingPageGraphQLPlayground()]
     })
