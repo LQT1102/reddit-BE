@@ -229,16 +229,25 @@ export class PostResolver{
                     }
                 });
 
-                if(existingVote && existingVote.value !== voteType){
-                    await transactionEntityManager.save(Upvote, {
-                        ...existingVote,
-                        value: voteType
-                    })
-
-                    post = await transactionEntityManager.save(Post, {
-                        ...post,
-                        points: post.points + voteType * 2
-                    })
+                if(existingVote){
+                    if(existingVote.value !== voteType){
+                        await transactionEntityManager.save(Upvote, {
+                            ...existingVote,
+                            value: voteType
+                        })
+    
+                        post = await transactionEntityManager.save(Post, {
+                            ...post,
+                            points: post.points + voteType * 2
+                        })
+                    }else{
+                        await transactionEntityManager.remove(Upvote, existingVote)
+    
+                        post = await transactionEntityManager.save(Post, {
+                            ...post,
+                            points: post.points - voteType
+                        })
+                    }
                 }
 
                 if(!existingVote){
