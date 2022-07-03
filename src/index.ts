@@ -1,3 +1,4 @@
+import { buildDataLoaders } from "./utils/dataLoader";
 
 require("dotenv").config();
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
@@ -57,7 +58,8 @@ const main = async() => {
         context: ({ req, res}): Context => ({
 			req,
 			res,
-            dataSource
+            dataSource,
+            dataLoaders: buildDataLoaders() //init data loader
 		}), //Get context pass from express
         plugins: [ApolloServerPluginLandingPageGraphQLPlayground()]
     })
