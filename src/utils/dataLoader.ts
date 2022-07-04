@@ -1,6 +1,6 @@
-import { Upvote } from "./../entities/Upvote";
 import DataLoader from "dataloader";
-import { In, FindOptionsWhere } from "typeorm";
+import { In } from "typeorm";
+import { Upvote } from "./../entities/Upvote";
 import { User } from "./../entities/User";
 
 interface VoteTypeCondition{

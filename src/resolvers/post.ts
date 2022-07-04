@@ -219,7 +219,7 @@ export class PostResolver{
     ): Promise<PostMutationResponse>{
         try {
             const {userId} = req.session
-            return await dataSource.transaction(async (transactionEntityManager) => {
+            return await dataSource.transaction(async (transactionEntityManager: any) => {
                 let post = await transactionEntityManager.findOne(Post, {
                     where: {
                         id: postId

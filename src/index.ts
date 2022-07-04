@@ -1,10 +1,7 @@
-import { buildDataLoaders } from "./utils/dataLoader";
-
-require("dotenv").config();
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { ApolloServer } from "apollo-server-express";
 import MongoStore from "connect-mongo";
-import { reverse } from "dns";
+import cors from 'cors';
 import express from 'express';
 import session from "express-session";
 import mongoose from "mongoose";
@@ -14,20 +11,24 @@ import { COOKIE_NAME, __prod__ } from "./commons/constants";
 import AppDataSource from "./dataSource";
 import resolvers from "./resolvers/appResolvers";
 import { Context } from "./types/Context";
-import cors from 'cors';
-import sendEmail from "./utils/sendEmail";
+import { buildDataLoaders } from "./utils/dataLoader";
+
+require("dotenv").config();
 
 
 const main = async() => {
     //Data source
     const dataSource = await AppDataSource.initialize();
     dataSource.transaction
+
+    if(__prod__) await dataSource.runMigrations()
+
     const app = express();
 
     const mongoUrl = `mongodb+srv://${process.env.SESSION_DB_USERNAME_DEV_PROD}:${process.env.SESSION_DB_PASSWORD_DEV_PROD}@reddit.kzjzy.mongodb.net/reddit`
 
     app.use(cors({
-        origin: 'http://localhost:3000',
+        origin: __prod__ ? process.env.CORS_ORIGIN_PROD :'http://localhost:3000',
         credentials: true, //Receive cookies from client
     }))
 
@@ -41,8 +42,9 @@ const main = async() => {
         cookie: {
             maxAge: 1000 * 60 * 60,
             httpOnly: true, //Prevent js frontend read cookie
-            secure: __prod__,
+            secure: __prod__, //Coookie only works in https
             sameSite: 'lax', //csrf
+            domain: __prod__ ? '.vercel.app' : undefined
         },
         store: MongoStore.create({mongoUrl}),
         secret: process.env.SESSION_SECRET_DEV_PROD as string,
@@ -71,8 +73,10 @@ const main = async() => {
         cors: false
     });
 
-    app.listen(4000, () => {
-        console.log("Server started on port 4000!!!")
+    const PORT = process.env.PORT || 4000 //process.env.PORT - default env of heroku
+
+    app.listen(PORT || 4000, () => {
+        console.log(`Server started on port ${PORT}!!!`)
     })
 }
 
