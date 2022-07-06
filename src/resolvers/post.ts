@@ -184,7 +184,7 @@ export class PostResolver{
     @Mutation(_return => PostMutationResponse)
     async deletePost(
         @Arg("id", _type=> ID) id : number, 
-        @Ctx() {req, res}: Context) : Promise<PostMutationResponse>{
+        @Ctx() {req, res, dataSource}: Context) : Promise<PostMutationResponse>{
         try {
             const existingPost = await Post.findOne({where: {id}});
             if(!existingPost) return {
@@ -193,7 +193,12 @@ export class PostResolver{
                 message: "Post not found."
             }
 
-            await Post.delete({id});
+            dataSource.transaction(async (transactionEntityManager: any) => {
+                await transactionEntityManager.delete(Post, {id});
+                await transactionEntityManager.delete(Upvote, {
+                    postId: id
+                })
+            })
 
             return {
                 code: 200,
