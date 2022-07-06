@@ -37,14 +37,16 @@ const main = async() => {
 
     console.log("Mongo connected.")
 
+    app.set('trust proxy', 1)
+
     app.use(session({
         name: COOKIE_NAME,
         cookie: {
             maxAge: 1000 * 60 * 60,
             httpOnly: true, //Prevent js frontend read cookie
             secure: __prod__, //Coookie only works in https
-            sameSite: 'lax', //csrf
-            domain: __prod__ ? '.vercel.app' : undefined
+            sameSite: 'none', //csrf - lax
+            // domain: __prod__ ? process.env.CORS_ORIGIN_PROD : undefined
         },
         store: MongoStore.create({mongoUrl}),
         secret: process.env.SESSION_SECRET_DEV_PROD as string,
